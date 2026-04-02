@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>造型時間線</title>
+    <style>
+        :root { --bg: #fdfcf8; --china: #c0392b; --taiwan: #27ae60; --west: #2980b9; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); font-family: sans-serif; overflow-x: hidden; }
+        header { position: fixed; top: 0; width: 100%; background: rgba(255,255,255,0.9); padding: 15px; text-align: center; z-index: 1000; border-bottom: 1px solid #ddd; }
+        .legend { display: flex; justify-content: center; gap: 15px; font-size: 13px; margin-top: 5px; }
+        .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+        #timeline-wrapper { position: relative; width: 100%; margin-top: 100px; min-height: 35000px; padding-bottom: 1000px; }
+        .center-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #ccc; transform: translateX(-50%); }
+        #sync-line { position: absolute; left: 0; width: 100%; height: 1px; border-top: 2px dashed #e74c3c; pointer-events: none; display: none; z-index: 10; }
+        .year-mark { position: absolute; left: 50%; transform: translate(-50%, -50%); background: var(--bg); padding: 2px 10px; font-size: 11px; color: #888; border: 1px solid #eee; z-index: 5; border-radius: 10px; }
+        .item { position: absolute; width: 155px; padding: 8px; border-radius: 5px; font-size: 12px; cursor: pointer; border-top: 1px solid rgba(255,255,255,0.4); box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        .china { text-align: right; border-right: 4px solid var(--china); }
+        .taiwan { text-align: left; border-left: 4px solid var(--taiwan); }
+        .west { text-align: left; border-left: 4px solid var(--west); }
+        #note-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; }
+        .note-container { max-width: 600px; margin: 10vh auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        #note-content { font-size: 16px; line-height: 1.8; color: #333; white-space: pre-wrap; background: #f9f9f9; padding: 20px; border-radius: 8px; max-height: 50vh; overflow-y: auto; border: 1px solid #eee; }
+        .close-btn { margin-top: 20px; padding: 12px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>造型時間線</h1>
+        <div class="legend">
+            <span><span class="dot" style="background:var(--china)"></span>古中國</span>
+            <span><span class="dot" style="background:var(--taiwan)"></span>臺灣</span>
+            <span><span class="dot" style="background:var(--west)"></span>西方</span>
+        </div>
+    </header>
+    <div id="timeline-wrapper">
+        <div id="sync-line"></div>
+        <div class="center-line"></div>
+    </div>
+    <div id="note-view" onclick="closeNote()">
+        <div class="note-container" onclick="event.stopPropagation()">
+            <h2 id="note-title"></h2>
+            <small id="note-time" style="color:#999"></small><br><br>
+            <div id="note-content"></div>
+            <button class="close-btn" onclick="closeNote()">關閉</button>
+        </div>
+    </div>
+<script>
+    const notesData = {
+        "長濱文化": "【台灣舊石器時代】\n1. 台灣已知最早文化。\n2. 打製石器、海邊生活。",
+        "大坌坑文化": "【台灣新石器早期】\n1. 粗繩紋陶器。\n2. 台灣農業起源。",
+        "商": "【青銅文明】\n饕餮紋、莊嚴神秘感。",
+        "包浩斯": "【現代設計】\n形隨機能。"
+    };
+    const SCALE = 5; 
+    const COMPRESSED_HEIGHT = 500; 
+    function getAbsoluteY(year) {
+        if (year <= -3500) return ((year - (-28000)) / (-3500 - (-28000))) * COMPRESSED_HEIGHT;
+        return COMPRESSED_HEIGHT + (year - (-3500)) * SCALE;
+    }
+    const chinaData = [{n:"夏",s:-2070,e:-1600},{n:"商",s:-1600,e:-1046},{n:"周",s:-1046,e:-256},{n:"秦",s:-221,e:-206},{n:"漢",s:-202,e:220},{n:"魏晉",s:220,e:420},{n:"南北朝",s:420,e:589},{n:"隋",s:581,e:618},{n:"唐",s:618,e:907},{n:"宋",s:960,e:1279},{n:"元",s:1271,e:1368},{n:"明",s:1368,e:1644},{n:"清",s:1644,e:1912}];
+    const westData = [{n:"埃及",s:-3500,e:-332},{n:"希臘",s:-1000,e:400},{n:"羅馬",s:-700,e:476},{n:"文藝復興",s:1400,e:1600},{n:"巴洛克",s:1600,e:1700},{n:"包浩斯",s:1919,e:1933}];
+    const taiwanData = [{n:"長濱文化",s:-28000,e:-13000},{n:"大坌坑文化",s:-5000,e:-3000},{n:"圓山文化",s:-2500,e:-500},{n:"十三行文化",s:200,e:1600},{n:"現代臺灣",s:1990,e:2025}];
+    function render(data, type, baseHue) {
+        data.forEach((item, i) => {
+            const el = document.createElement('div');
+            el.className = `item ${type}`;
+            const topY = getAbsoluteY(item.s);
+            el.style.top = topY + 'px';
+            el.style.height = Math.max(getAbsoluteY(item.e) - topY, 25) + 'px';
+            el.style.backgroundColor = `hsl(${baseHue}, 60%, 85%)`;
+            if(type === 'china') el.style.right = 'calc(50% + 40px)';
+            else if(type === 'taiwan') el.style.left = 'calc(50% + 40px)';
+            else el.style.left = 'calc(50% + 205px)';
+            el.innerHTML = `<strong>${item.n}</strong><br><small>${item.s}~${item.e}</small>`;
+            el.onclick = () => {
+                document.getElementById('note-title').innerText = item.n;
+                document.getElementById('note-time').innerText = `${item.s} ~ ${item.e}`;
+                document.getElementById('note-content').innerText = notesData[item.n] || "尚無筆記。";
+                document.getElementById('note-view').style.display = "block";
+            };
+            document.getElementById('timeline-wrapper').appendChild(el);
+        });
+    }
+    for(let y = -28000; y <= 2025; ) {
+        const div = document.createElement('div');
+        div.className = 'year-mark';
+        div.style.top = getAbsoluteY(y) + 'px';
+        div.innerText = y < 0 ? `BCE ${Math.abs(y)}` : `CE ${y}`;
+        document.getElementById('timeline-wrapper').appendChild(div);
+        if (y < -3500) { y += 5000; if (y > -3500) y = -3500; } else { y += 100; }
+    }
+    function closeNote() { document.getElementById('note-view').style.display = "none"; }
+    render(chinaData, 'china', 15);
+    render(taiwanData, 'taiwan', 140);
+    render(westData, 'west', 210);
+</script>
+</body>
+</html>
