@@ -3,72 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>造型時間線</title>
+    <title>CKR - 造型時間線</title>
     <style>
         :root { --bg: #fdfcf8; --china: #c0392b; --taiwan: #27ae60; --west: #2980b9; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); font-family: sans-serif; overflow-x: hidden; }
-        header { position: fixed; top: 0; width: 100%; background: rgba(255,255,255,0.95); padding: 15px; text-align: center; z-index: 1000; border-bottom: 1px solid #ddd; }
-        .legend { display: flex; justify-content: center; gap: 15px; font-size: 13px; margin-top: 5px; }
+        body { background: var(--bg); font-family: "PingFang TC", sans-serif; overflow-x: hidden; }
+
+        header { position: fixed; top: 0; width: 100%; background: rgba(255,255,255,0.9); padding: 15px; text-align: center; z-index: 1000; border-bottom: 1px solid #ddd; }
+        .legend { display: flex; justify-content: center; gap: 20px; font-size: 13px; margin-top: 5px; }
         .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
-        #timeline-wrapper { position: relative; width: 100%; margin-top: 100px; min-height: 5000px; padding-bottom: 500px; }
+        
+        #timeline-wrapper { position: relative; width: 100%; margin-top: 100px; min-height: 35000px; padding-bottom: 1000px; }
         .center-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #ccc; transform: translateX(-50%); }
-        .item { position: absolute; width: 140px; padding: 8px; border-radius: 5px; font-size: 12px; cursor: pointer; border-top: 1px solid rgba(255,255,255,0.4); box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-        .china { text-align: right; border-right: 4px solid var(--china); right: calc(50% + 20px); }
-        .taiwan { text-align: left; border-left: 4px solid var(--taiwan); left: calc(50% + 20px); }
-        .west { text-align: left; border-left: 4px solid var(--west); left: calc(50% + 170px); }
-        #note-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; }
-        .note-container { max-width: 90%; margin: 15vh auto; background: white; padding: 20px; border-radius: 15px; }
-        #note-content { font-size: 16px; line-height: 1.6; white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 10px; }
-        .close-btn { margin-top: 15px; padding: 10px; background: #333; color: white; border: none; border-radius: 5px; width: 100%; font-weight: bold; }
+        
+        #sync-line { position: absolute; left: 0; width: 100%; height: 1px; border-top: 2px dashed #e74c3c; pointer-events: none; display: none; z-index: 10; }
+
+        .year-mark { position: absolute; left: 50%; transform: translate(-50%, -50%); background: var(--bg); padding: 2px 10px; font-size: 11px; color: #888; border: 1px solid #eee; z-index: 5; }
+        
+        .item { position: absolute; width: 155px; padding: 6px; border-radius: 3px; font-size: 12px; cursor: pointer; border-top: 1px solid rgba(255,255,255,0.4); box-shadow: 1px 1px 3px rgba(0,0,0,0.05); }
+        .item:hover { z-index: 500 !important; filter: brightness(1.05); }
+        
+        .china { text-align: right; border-right: 4px solid var(--china); }
+        .taiwan { text-align: left; border-left: 4px solid var(--taiwan); }
+        .west { text-align: left; border-left: 4px solid var(--west); }
+
+        #note-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; padding: 20px; }
+        .note-container { max-width: 600px; margin: 10vh auto; background: white; padding: 30px; border-radius: 12px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .note-header { border-bottom: 2px solid #eee; margin-bottom: 15px; padding-bottom: 10px; }
+        #note-content { font-size: 16px; line-height: 1.8; color: #333; white-space: pre-wrap; background: #fdfdfd; padding: 15px; border-radius: 6px; min-height: 200px; border: 1px inset #eee; }
+        .close-btn { margin-top: 20px; padding: 10px 25px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
+
+<div id="main-view">
     <header>
         <h1>造型時間線</h1>
         <div class="legend">
             <span><span class="dot" style="background:var(--china)"></span>古中國</span>
             <span><span class="dot" style="background:var(--taiwan)"></span>臺灣</span>
-            <span><span class="dot" style="background:var(--west)"></span>西方</span>
+            <span><span class="dot" style="background:var(--west)"></span>西方藝術</span>
         </div>
     </header>
-    <div id="timeline-wrapper"><div class="center-line"></div></div>
-    <div id="note-view" onclick="this.style.display='none'">
-        <div class="note-container" onclick="event.stopPropagation()">
-            <h2 id="note-title"></h2>
-            <div id="note-content"></div>
-            <button class="close-btn" onclick="document.getElementById('note-view').style.display='none'">關閉</button>
-        </div>
+    <div id="timeline-wrapper">
+        <div id="sync-line"></div>
+        <div class="center-line"></div>
     </div>
+</div>
+
+<div id="note-view" onclick="closeNote()">
+    <div class="note-container" onclick="event.stopPropagation()">
+        <div class="note-header">
+            <h2 id="note-title"></h2>
+            <small id="note-time" style="color:#999"></small>
+        </div>
+        <div id="note-content"></div>
+        <button class="close-btn" onclick="closeNote()">關閉</button>
+    </div>
+</div>
+
 <script>
-    const notesData = { "長濱文化": "台灣已知最早文化，打製石器。", "大坌坑文化": "台灣新石器起源，繩紋陶器。", "商": "青銅文明，饕餮紋、莊嚴神秘。", "包浩斯": "現代設計起源，形隨機能。" };
-    const SCALE = 3;
-    function getY(year) {
-        if (year < -10000) return (year + 28000) * 0.05; 
-        return 1000 + (year + 10000) * SCALE;
+    /* ---------------------------------------------------------
+       在此編輯你的筆記內容！格式為 "名稱": `內容`, 
+       --------------------------------------------------------- */
+    const notesData = {
+        "商": `要在這裡打字！
+               例如：青銅器、饕餮紋、宗廟文化。
+               這裡可以隨意換行。`,
+
+        "唐": `要在這裡打字！
+               例如：唐三彩、吳道子。`,
+
+        "包浩斯": `要在這裡打字！
+                  例如：格羅佩斯、形隨機能。`,
+
+        "大坌坑文化": `【台灣新石器重點】
+1. 台灣新石器時代早期的代表文化。
+2. 粗繩紋陶器、石磨、石鏃。
+3. 開始定居農業。`,
+
+        "你的朝代名": `在這裡輸入你的統測重點...`,
+    };
+
+    // --- 核心邏輯：分段比例 ---
+    const SCALE = 5; 
+    const COMPRESSED_HEIGHT = 500; 
+
+    function getAbsoluteY(year) {
+        if (year <= -3500) {
+            return ((year - (-28000)) / (-3500 - (-28000))) * COMPRESSED_HEIGHT;
+        } else {
+            return COMPRESSED_HEIGHT + (year - (-3500)) * SCALE;
+        }
     }
-    const data = [
-        {n:"長濱文化",s:-28000,e:-13000,t:"taiwan",c:140},
-        {n:"大坌坑文化",s:-5000,e:-3000,t:"taiwan",c:140},
-        {n:"商",s:-1600,e:-1046,t:"china",c:15},
-        {n:"唐",s:618,e:907,t:"china",c:15},
-        {n:"包浩斯",s:1919,e:1933,t:"west",c:210}
+
+    const chinaData = [{n:"夏",s:-2070,e:-1600},{n:"商",s:-1600,e:-1046},{n:"周",s:-1046,e:-256},{n:"秦",s:-221,e:-206},{n:"漢",s:-202,e:220},{n:"魏晉",s:220,e:420},{n:"南北朝",s:420,e:589},{n:"隋",s:581,e:618},{n:"唐",s:618,e:907},{n:"宋",s:960,e:1279},{n:"元",s:1271,e:1368},{n:"明",s:1368,e:1644},{n:"清",s:1644,e:1912}];
+    const westData = [{n:"古代近東",s:-3500,e:538},{n:"埃及",s:-3500,e:-332},{n:"希臘",s:-1000,e:400},{n:"羅馬",s:-700,e:476},{n:"拜占庭",s:500,e:1200},{n:"哥德",s:1100,e:1500},{n:"文藝復興",s:1400,e:1600},{n:"巴洛克",s:1600,e:1700},{n:"洛可可",s:1715,e:1770},{n:"工業革命",s:1760,e:1840},{n:"新古典主義",s:1750,e:1820},{n:"浪漫主義",s:1800,e:1850},{n:"寫實主義",s:1850,e:1900},{n:"美術工藝運動",s:1860,e:1910},{n:"印象派",s:1860,e:1880},{n:"新印象派",s:1880,e:1910},{n:"象徵主義",s:1885,e:1910},{n:"新藝術",s:1890,e:1910},{n:"分離派",s:1897,e:1920},{n:"野獸派",s:1905,e:1915},{n:"表現主義",s:1907,e:1933},{n:"立體派",s:1907,e:1914},{n:"未來主義",s:1909,e:1914},{n:"構成主義",s:1915,e:1935},{n:"風格派",s:1917,e:1931},{n:"包浩斯",s:1919,e:1933},{n:"德國工藝聯盟",s:1907,e:1934},{n:"純粹主義",s:1920,e:1925},{n:"裝飾藝術",s:1920,e:1940},{n:"超現實主義",s:1924,e:1930},{n:"流線型風格",s:1930,e:1950},{n:"普普藝術",s:1950,e:1965},{n:"歐普藝術",s:1965,e:1973},{n:"新現代主義",s:1981,e:2025},{n:"後現代主義",s:1980,e:2025}];
+    
+    const taiwanData = [
+        {n:"長濱文化",s:-28000,e:-13000},
+        {n:"大坌坑文化",s:-5000,e:-3000},
+        {n:"圓山文化",s:-2500,e:-500},
+        {n:"十三行文化",s:200,e:1600},
+        {n:"荷西時期",s:1624,e:1662},
+        {n:"明鄭時期",s:1662,e:1683},
+        {n:"日治時期",s:1895,e:1945},
+        {n:"戰後時期",s:1945,e:1990},
+        {n:"現代臺灣",s:1990,e:2025}
     ];
-    data.forEach(item => {
-        const el = document.createElement('div');
-        el.className = `item ${item.t}`;
-        const topY = getY(item.s);
-        el.style.top = topY + 'px';
-        el.style.height = Math.max((item.e - item.s) * (item.s < -10000 ? 0.05 : SCALE), 35) + 'px';
-        el.style.backgroundColor = `hsl(${item.c}, 60%, 90%)`;
-        el.innerHTML = `<strong>${item.n}</strong><br>${item.s}~${item.e}`;
-        el.onclick = () => {
-            document.getElementById('note-title').innerText = item.n;
-            document.getElementById('note-content').innerText = notesData[item.n] || "尚無詳細筆記，快去 GitHub 增加內容吧！";
-            document.getElementById('note-view').style.display = "block";
-        };
-        document.getElementById('timeline-wrapper').appendChild(el);
-    });
+
+    function render(data, type, baseHue) {
+        const sorted = [...data].sort((a,b)=> a.s - b.s);
+        let layers = [];
+        sorted.forEach((item, i) => {
+            let layer = 0; while(layers[layer] > item.s) layer++; layers[layer] = item.e;
+            const el = document.createElement('div');
+            el.className = `item ${type}`;
+            const topY = getAbsoluteY(item.s);
+            const bottomY = getAbsoluteY(item.e);
+            el.style.top = topY + 'px';
+            el.style.height = Math.max(bottomY - topY, 25) + 'px';
+            el.style.backgroundColor = `hsl(${baseHue}, 60%, ${85 - (i%8*4)}%)`;
+            if(type === 'china') el.style.right = `calc(50% + 40px + ${layer * 165}px)`;
+            else if(type === 'taiwan') el.style.left = `calc(50% + 40px)`;
+            else el.style.left = `calc(50% + 215px + ${layer * 165}px)`;
+            el.innerHTML = `<strong>${item.n}</strong><br><small>${item.s}~${item.e}</small>`;
+            el.onmouseenter = () => { syncLine.style.top = topY + 'px'; syncLine.style.display = 'block'; };
+            el.onmouseleave = () => { syncLine.style.display = 'none'; };
+            el.onclick = () => openNote(item);
+            document.getElementById('timeline-wrapper').appendChild(el);
+        });
+    }
+
+    for(let y = -28000; y <= 2025; ) {
+        const div = document.createElement('div');
+        div.className = 'year-mark';
+        div.style.top = getAbsoluteY(y) + 'px';
+        div.innerText = y < 0 ? `BCE ${Math.abs(y)}` : `CE ${y}`;
+        document.getElementById('timeline-wrapper').appendChild(div);
+        if (y < -3500) {
+            y += 5000;
+            if (y > -3500) y = -3500;
+        } else {
+            y += 100;
+        }
+    }
+
+    function openNote(item) {
+        document.getElementById('note-title').innerText = item.n;
+        document.getElementById('note-time').innerText = `時間範圍：${item.s} ~ ${item.e}`;
+        const content = notesData[item.n] || "目前尚無此內容(((o(*ﾟ▽ﾟ*)o)))。";
+        document.getElementById('note-content').innerText = content;
+        document.getElementById('note-view').style.display = "block";
+    }
+
+    function closeNote() { document.getElementById('note-view').style.display = "none"; }
+
+    render(chinaData, 'china', 15);
+    render(taiwanData, 'taiwan', 140);
+    render(westData, 'west', 210);
 </script>
 </body>
 </html>
