@@ -3,165 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CKR - 造型時間線</title>
+    <title>CKR - 造型時間線1.2（完整無刪減對比版）</title>
     <style>
-        :root { --bg: #fdfcf8; --china: #c0392b; --taiwan: #27ae60; --west: #2980b9; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); font-family: "PingFang TC", sans-serif; overflow-x: hidden; }
+        :root { 
+            --bg: #fdfcf8; 
+            --china: #c0392b; 
+            --taiwan: #27ae60; 
+            --west: #2980b9; 
+            --text: #333;
+        }
+        
+        body.theme-industrial { --bg: #e0e0e0; --china: #444; --taiwan: #777; --west: #2c3e50; --text: #111; }
+        body.theme-vintage { --bg: #f4e4bc; --china: #8b4513; --taiwan: #556b2f; --west: #4682b4; --text: #3e2723; }
 
-        header { position: fixed; top: 0; width: 100%; background: rgba(255,255,255,0.9); padding: 15px; text-align: center; z-index: 1000; border-bottom: 1px solid #ddd; }
-        .legend { display: flex; justify-content: center; gap: 20px; font-size: 13px; margin-top: 5px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; transition: background 0.3s; overflow-x: auto; }
+
+        header { position: fixed; top: 0; width: 100%; background: rgba(255,255,255,0.95); padding: 10px; text-align: center; z-index: 1000; border-bottom: 1px solid #ddd; backdrop-filter: blur(5px); }
+        
+        #control-panel {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ctrl-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: 0.3s;
+            text-align: center;
+            display: block;
+            width: 160px;
+            text-decoration: none;
+            color: #333;
+        }
+        .ctrl-btn:hover { background: #f9f9f9; transform: translateY(-2px); }
+        #external-link-btn { background: #333; color: #fff; border: none; }
+
+        #rgb-menu {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            width: 180px;
+            backdrop-filter: blur(8px);
+        }
+        .rgb-row { display: flex; align-items: center; font-size: 12px; margin-bottom: 8px; color: #333; }
+        .rgb-row input { flex: 1; margin-left: 10px; cursor: pointer; }
+        #rgb-preview { height: 12px; width: 100%; border-radius: 4px; border: 1px solid #ddd; margin-top: 5px; }
+
+        .theme-selector { display: flex; justify-content: center; gap: 15px; margin: 10px 0; }
+        .theme-btn { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: transform 0.2s; }
+        .legend { display: flex; justify-content: center; gap: 20px; font-size: 13px; }
         .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
         
-        #timeline-wrapper { position: relative; width: 100%; margin-top: 100px; min-height: 35000px; padding-bottom: 1000px; }
-        .center-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #ccc; transform: translateX(-50%); }
+        #timeline-wrapper { position: relative; width: 100%; margin-top: 160px; min-height: 6000px; padding-bottom: 1000px; min-width: 1200px; }
+        .center-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #666; transform: translateX(-50%); }
         
-        #sync-line { position: absolute; left: 0; width: 100%; height: 1px; border-top: 2px dashed #e74c3c; pointer-events: none; display: none; z-index: 10; }
+        #sync-line { 
+            position: absolute; 
+            left: 0; 
+            width: 100%; 
+            height: 0; 
+            border-top: 2px solid #FFD700; 
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8); 
+            pointer-events: none; 
+            display: none; 
+            z-index: 10; 
+        }
 
-        .year-mark { position: absolute; left: 50%; transform: translate(-50%, -50%); background: var(--bg); padding: 2px 10px; font-size: 11px; color: #888; border: 1px solid #eee; z-index: 5; }
+        .year-mark { position: absolute; left: 50%; transform: translate(-50%, -50%); background: var(--bg); padding: 2px 10px; font-size: 11px; color: #888; border: 1px solid #eee; z-index: 5; white-space: nowrap; transition: background 0.3s; }
         
-        .item { position: absolute; width: 155px; padding: 6px; border-radius: 3px; font-size: 12px; cursor: pointer; border-top: 1px solid rgba(255,255,255,0.4); box-shadow: 1px 1px 3px rgba(0,0,0,0.05); }
-        .item:hover { z-index: 500 !important; filter: brightness(1.05); }
+        .item { position: absolute; width: 160px; padding: 8px; border-radius: 4px; font-size: 12px; cursor: pointer; border-top: 1px solid rgba(255,255,255,0.4); box-shadow: 2px 2px 5px rgba(0,0,0,0.1); transition: 0.2s; overflow: hidden; color: #333; }
+        .item:hover { z-index: 500 !important; transform: scale(1.05); } 
         
         .china { text-align: right; border-right: 4px solid var(--china); }
         .taiwan { text-align: left; border-left: 4px solid var(--taiwan); }
         .west { text-align: left; border-left: 4px solid var(--west); }
 
-        #note-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; padding: 20px; }
-        .note-container { max-width: 600px; margin: 10vh auto; background: white; padding: 30px; border-radius: 12px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .note-header { border-bottom: 2px solid #eee; margin-bottom: 15px; padding-bottom: 10px; }
-        #note-content { font-size: 16px; line-height: 1.8; color: #333; white-space: pre-wrap; background: #fdfdfd; padding: 15px; border-radius: 6px; min-height: 200px; border: 1px inset #eee; }
-        .close-btn { margin-top: 20px; padding: 10px 25px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .dim { opacity: 0.15; }
+        .active { opacity: 1; transform: scale(1.05); }
+
+        #note-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; }
+        .note-container { max-width: 650px; margin: 8vh auto; background: white; padding: 30px; border-radius: 12px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-height: 80vh; overflow-y: auto; color: #333; }
+        .close-btn { margin-top: 20px; padding: 12px; background: #333; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
     </style>
 </head>
 <body>
 
-<div id="main-view">
-    <header>
-        <h1>造型時間線</h1>
-        <div class="legend">
-            <span><span class="dot" style="background:var(--china)"></span>古中國</span>
-            <span><span class="dot" style="background:var(--taiwan)"></span>臺灣</span>
-            <span><span class="dot" style="background:var(--west)"></span>西方藝術</span>
-        </div>
-    </header>
-    <div id="timeline-wrapper">
-        <div id="sync-line"></div>
-        <div class="center-line"></div>
+<div id="control-panel">
+    <button class="ctrl-btn" onclick="toggleRGB()">🎨 介面設置</button>
+    <a href="https://www.kuse.ai/pages/mxpmrzdhj1bv/ckr-造型時間線" target="_blank" class="ctrl-btn" id="external-link-btn">🔗 詳細資料內容</a>
+    <div id="rgb-menu">
+        <p style="font-size: 12px; font-weight: bold; margin-bottom: 10px;">自定義背景顏色</p>
+        <div class="rgb-row">R <input type="range" id="r-val" min="0" max="255" value="253"></div>
+        <div class="rgb-row">G <input type="range" id="g-val" min="0" max="255" value="252"></div>
+        <div class="rgb-row">B <input type="range" id="b-val" min="0" max="255" value="248"></div>
+        <div id="rgb-preview"></div>
     </div>
+</div>
+
+<header>
+    <h1>造型時間線-時間線對比 1.2</h1>
+    <div class="theme-selector">
+        <div class="theme-btn" style="background: #fdfcf8;" onclick="setTheme('default')"></div>
+        <div class="theme-btn" style="background: #e0e0e0;" onclick="setTheme('industrial')"></div>
+        <div class="theme-btn" style="background: #f4e4bc;" onclick="setTheme('vintage')"></div>
+    </div>
+    <div class="legend">
+        <span><span class="dot" style="background:var(--china)"></span>古中國</span>
+        <span><span class="dot" style="background:var(--taiwan)"></span>臺灣</span>
+        <span><span class="dot" style="background:var(--west)"></span>西方藝術</span>
+    </div>
+</header>
+
+<div id="timeline-wrapper">
+    <div id="sync-line"></div>
+    <div class="center-line"></div>
 </div>
 
 <div id="note-view" onclick="closeNote()">
     <div class="note-container" onclick="event.stopPropagation()">
-        <div class="note-header">
-            <h2 id="note-title"></h2>
-            <small id="note-time" style="color:#999"></small>
-        </div>
+        <h2 id="note-title"></h2>
+        <p id="note-time"></p>
         <div id="note-content"></div>
-        <button class="close-btn" onclick="closeNote()">關閉</button>
+        <button class="close-btn" onclick="closeNote()">關閉視窗</button>
     </div>
 </div>
 
 <script>
-    /* ---------------------------------------------------------
-       在此編輯你的筆記內容！格式為 "名稱": `內容`, 
-       --------------------------------------------------------- */
-    const notesData = {
-        "商": `要在這裡打字！
-               例如：青銅器、饕餮紋、宗廟文化。
-               這裡可以隨意換行。`,
+function toggleRGB() {
+    const menu = document.getElementById('rgb-menu');
+    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+}
 
-        "唐": `要在這裡打字！
-               例如：唐三彩、吳道子。`,
+function updateBgColor() {
+    const r = document.getElementById('r-val').value;
+    const g = document.getElementById('g-val').value;
+    const b = document.getElementById('b-val').value;
+    const color = `rgb(${r}, ${g}, ${b})`;
+    document.documentElement.style.setProperty('--bg', color);
+    document.getElementById('rgb-preview').style.backgroundColor = color;
+}
 
-        "包浩斯": `要在這裡打字！
-                  例如：格羅佩斯、形隨機能。`,
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('r-val').addEventListener('input', updateBgColor);
+    document.getElementById('g-val').addEventListener('input', updateBgColor);
+    document.getElementById('b-val').addEventListener('input', updateBgColor);
+});
 
-        "大坌坑文化": `【台灣新石器重點】
-1. 台灣新石器時代早期的代表文化。
-2. 粗繩紋陶器、石磨、石鏃。
-3. 開始定居農業。`,
+function setTheme(theme) {
+    document.body.className = theme === 'default' ? '' : 'theme-' + theme;
+}
 
-        "你的朝代名": `在這裡輸入你的統測重點...`,
-    };
+const notesData = {
+"有巢氏":`新石器 教民構木為巢，避野獸。`,
+"燧人氏":`新石器 鑽木取火，奠定陶器基礎。`,
+"伏羲氏":`新石器 教民結網、畫八卦。`,
+"神農氏":`新石器 醫藥之始、發明陶器。`,
+"仰韶文化":`新石器 彩陶文化，紅土陶器為主。`,
+"龍山文化":`新石器 黑陶文化，器型輕薄精緻。`,
+"黃帝時期":`新石器 倉頡造字、制定象形。`,
+"夏":`青銅文明之始。`,
+"商":`饕餮紋、神權藝術高峰。`,
+"周":`禮樂制度、紋飾細膩化。`,
+"秦":`寫實主義、大一統氣勢。`,
+"漢":`雄渾博大、漆器與絲綢。`,
+"魏晉":`神韻超越形似。`,
+"南北朝":`佛教石窟之美。`,
+"唐":`三彩絢麗、大唐氣度。`,
+"宋":`極簡美學、瓷器高峰。`,
+"明":`家具線條優美。`,
+"清":`精緻繁瑣、工藝巔峰。`,
+"長濱文化":`打製石器。`,
+"大坌坑文化":`繩紋陶器。`,
+"日治時期":`西洋近代設計引入。`,
+"包浩斯":`現代主義核心，功能優先。`
+};
 
-    // --- 核心邏輯：分段比例 ---
-    const SCALE = 5; 
-    const COMPRESSED_HEIGHT = 500; 
+function openNote(item){
+document.getElementById('note-title').innerText=item.n;
+document.getElementById('note-time').innerText=`${item.s}~${item.e}`;
+document.getElementById('note-content').innerText=notesData[item.n]||"";
+document.getElementById('note-view').style.display="block";
+}
 
-    function getAbsoluteY(year) {
-        if (year <= -3500) {
-            return ((year - (-28000)) / (-3500 - (-28000))) * COMPRESSED_HEIGHT;
-        } else {
-            return COMPRESSED_HEIGHT + (year - (-3500)) * SCALE;
-        }
-    }
+function closeNote(){
+document.getElementById('note-view').style.display="none";
+}
 
-    const chinaData = [{n:"夏",s:-2070,e:-1600},{n:"商",s:-1600,e:-1046},{n:"周",s:-1046,e:-256},{n:"秦",s:-221,e:-206},{n:"漢",s:-202,e:220},{n:"魏晉",s:220,e:420},{n:"南北朝",s:420,e:589},{n:"隋",s:581,e:618},{n:"唐",s:618,e:907},{n:"宋",s:960,e:1279},{n:"元",s:1271,e:1368},{n:"明",s:1368,e:1644},{n:"清",s:1644,e:1912}];
-    const westData = [{n:"古代近東",s:-3500,e:538},{n:"埃及",s:-3500,e:-332},{n:"希臘",s:-1000,e:400},{n:"羅馬",s:-700,e:476},{n:"拜占庭",s:500,e:1200},{n:"哥德",s:1100,e:1500},{n:"文藝復興",s:1400,e:1600},{n:"巴洛克",s:1600,e:1700},{n:"洛可可",s:1715,e:1770},{n:"工業革命",s:1760,e:1840},{n:"新古典主義",s:1750,e:1820},{n:"浪漫主義",s:1800,e:1850},{n:"寫實主義",s:1850,e:1900},{n:"美術工藝運動",s:1860,e:1910},{n:"印象派",s:1860,e:1880},{n:"新印象派",s:1880,e:1910},{n:"象徵主義",s:1885,e:1910},{n:"新藝術",s:1890,e:1910},{n:"分離派",s:1897,e:1920},{n:"野獸派",s:1905,e:1915},{n:"表現主義",s:1907,e:1933},{n:"立體派",s:1907,e:1914},{n:"未來主義",s:1909,e:1914},{n:"構成主義",s:1915,e:1935},{n:"風格派",s:1917,e:1931},{n:"包浩斯",s:1919,e:1933},{n:"德國工藝聯盟",s:1907,e:1934},{n:"純粹主義",s:1920,e:1925},{n:"裝飾藝術",s:1920,e:1940},{n:"超現實主義",s:1924,e:1930},{n:"流線型風格",s:1930,e:1950},{n:"普普藝術",s:1950,e:1965},{n:"歐普藝術",s:1965,e:1973},{n:"新現代主義",s:1981,e:2025},{n:"後現代主義",s:1980,e:2025}];
-    
-    const taiwanData = [
-        {n:"長濱文化",s:-28000,e:-13000},
-        {n:"大坌坑文化",s:-5000,e:-3000},
-        {n:"圓山文化",s:-2500,e:-500},
-        {n:"十三行文化",s:200,e:1600},
-        {n:"荷西時期",s:1624,e:1662},
-        {n:"明鄭時期",s:1662,e:1683},
-        {n:"日治時期",s:1895,e:1945},
-        {n:"戰後時期",s:1945,e:1990},
-        {n:"現代臺灣",s:1990,e:2025}
-    ];
+const POS={china:-180,taiwan:-40,west:120};
 
-    function render(data, type, baseHue) {
-        const sorted = [...data].sort((a,b)=> a.s - b.s);
-        let layers = [];
-        sorted.forEach((item, i) => {
-            let layer = 0; while(layers[layer] > item.s) layer++; layers[layer] = item.e;
-            const el = document.createElement('div');
-            el.className = `item ${type}`;
-            const topY = getAbsoluteY(item.s);
-            const bottomY = getAbsoluteY(item.e);
-            el.style.top = topY + 'px';
-            el.style.height = Math.max(bottomY - topY, 25) + 'px';
-            el.style.backgroundColor = `hsl(${baseHue}, 60%, ${85 - (i%8*4)}%)`;
-            if(type === 'china') el.style.right = `calc(50% + 40px + ${layer * 165}px)`;
-            else if(type === 'taiwan') el.style.left = `calc(50% + 40px)`;
-            else el.style.left = `calc(50% + 215px + ${layer * 165}px)`;
-            el.innerHTML = `<strong>${item.n}</strong><br><small>${item.s}~${item.e}</small>`;
-            el.onmouseenter = () => { syncLine.style.top = topY + 'px'; syncLine.style.display = 'block'; };
-            el.onmouseleave = () => { syncLine.style.display = 'none'; };
-            el.onclick = () => openNote(item);
-            document.getElementById('timeline-wrapper').appendChild(el);
-        });
-    }
+function getY(y){
+if(y<=-5000)return((y+28000)/23000)*400;
+if(y<=1800)return400+((y+5000)/6800)*1500;
+return1900+(y-1800)*15;
+}
 
-    for(let y = -28000; y <= 2025; ) {
-        const div = document.createElement('div');
-        div.className = 'year-mark';
-        div.style.top = getAbsoluteY(y) + 'px';
-        div.innerText = y < 0 ? `BCE ${Math.abs(y)}` : `CE ${y}`;
-        document.getElementById('timeline-wrapper').appendChild(div);
-        if (y < -3500) {
-            y += 5000;
-            if (y > -3500) y = -3500;
-        } else {
-            y += 100;
-        }
-    }
+const wrapper=document.getElementById("timeline-wrapper");
+const syncLine=document.getElementById("sync-line");
 
-    function openNote(item) {
-        document.getElementById('note-title').innerText = item.n;
-        document.getElementById('note-time').innerText = `時間範圍：${item.s} ~ ${item.e}`;
-        const content = notesData[item.n] || "目前尚無此內容(((o(*ﾟ▽ﾟ*)o)))。";
-        document.getElementById('note-content').innerText = content;
-        document.getElementById('note-view').style.display = "block";
-    }
+function render(data,type,color){
+let layers=[];
+data.sort((a,b)=>a.s-b.s).forEach(d=>{
+let layer=0;
+while(layers[layer]>d.s)layer++;
+layers[layer]=d.e;
 
-    function closeNote() { document.getElementById('note-view').style.display = "none"; }
+const el=document.createElement("div");
+el.className="item "+type;
 
-    render(chinaData, 'china', 15);
-    render(taiwanData, 'taiwan', 140);
-    render(westData, 'west', 210);
+const top=getY(d.s);
+el.style.top=top+"px";
+el.style.height=Math.max(getY(d.e)-top,45)+"px";
+el.style.left=`calc(50% + ${POS[type]+layer*20}px)`;
+el.style.background=`hsl(${color},60%,${88-layer*6}%)`;
+
+el.innerHTML=`<b>${d.n}</b><br>${d.s}~${d.e}`;
+
+el.onclick=()=>openNote(d);
+
+el.onmouseenter=()=>{
+document.querySelectorAll(".item").forEach(i=>{
+const t=parseFloat(i.style.top);
+const h=parseFloat(i.style.height);
+if(top>=t&&top<=t+h){i.classList.add("active");i.classList.remove("dim");}
+else{i.classList.add("dim");i.classList.remove("active");}
+});
+syncLine.style.top=top+"px;
+syncLine.style.display="block";
+};
+
+el.onmouseleave=()=>{
+document.querySelectorAll(".item").forEach(i=>i.classList.remove("dim","active"));
+syncLine.style.display="none";
+};
+
+wrapper.appendChild(el);
+});
+}
+
+wrapper.addEventListener("mousemove",e=>{
+syncLine.style.top=e.pageY+"px";
+syncLine.style.display="block";
+});
 </script>
 </body>
 </html>
